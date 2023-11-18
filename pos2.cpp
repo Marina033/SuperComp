@@ -1,7 +1,12 @@
 #include <iostream>
 #include <vector>
-#include <chrono>
+#include <fstream>
+#include <math.h>
+#include <omp.h>
+#include <cstdlib>
+#include <cmath>
 
+using namespace std;
 
 // Функция для вычисления значения k(x, y)
 double k(double x, double y, double tol=0.0001) {
@@ -22,8 +27,11 @@ double F(double x, double y) {
 }
 
 // Функция для решения дифференциального уравнения на прямоугольнике Π
-void solveEquation(int N,double epsilon, double A1, double A2, double B1, double B2) {
-  auto start = std::chrono::high_resolution_clock::now();
+void solveEquation(int N,double epsilon, double A1, double A2, double B1, double B2, int cnt_threads) {
+
+  omp_set_num_threads(cnt_threads);
+
+  double time = omp_get_wtime();
   // Определение параметров сетки
   int Nx = N/* ваше значение */;
   int Ny = N/* ваше значение */;
@@ -33,7 +41,7 @@ void solveEquation(int N,double epsilon, double A1, double A2, double B1, double
   double hy = (B2 - A2) / (Ny - 1);
 
   // Создание сетки для хранения решения v
-  std::vector<std::vector<double>> v(Nx, std::vector<double>(Ny, 0.0));
+  std::vector<std::vector<double> > v(Nx, std::vector<double>(Ny, 0.0));
 
   // Итерационный процесс для решения уравнения
   double error = 1000000/* начальное */;
@@ -53,7 +61,7 @@ void solveEquation(int N,double epsilon, double A1, double A2, double B1, double
                    k(A1 + i * hx, A2 + j * hy) * (v[i][j - 1] + v[i][j + 1]) / (hy * hy) -
                    F(A1 + i * hx, A2 + j * hy)) /
                   (2 * k(A1 + i * hx, A2 + j * hy) / (hx * hx) + 2 * k(A1 + i * hx, A2 + j * hy) / (hy * hy));
-        error = std::max(error, std::abs(v[i][j] - vOld));
+        error = max(error, abs(v[i][j] - vOld));
       }
     }
 
@@ -70,16 +78,13 @@ void solveEquation(int N,double epsilon, double A1, double A2, double B1, double
     // Вычисление ошибки и инкрементирование счетчика итераций
     iteration++;
   }
-  auto end = std::chrono::high_resolution_clock::now();
 
   // Вычисление времени выполнения в миллисекундах
-  std::chrono::duration<double, std::milli> duration = end - start;
-  double executionTime = duration.count();
 
   // Вывод времени выполнения
-  std::cout << "Time to solveEquation no-parallel: " << executionTime << " ms" << std::endl;
+  cout << "Duration = " << omp_get_wtime() - time << endl;
   std::cout << "Result after " << iteration << " iterations" << std::endl;
-
+  cout << "Cnt threads = " << cnt_threads << endl;
   // Вывод результата
   std::cout << "Results: "<<std::endl;
   for (int i = 0; i < Nx; ++i) {
@@ -90,13 +95,13 @@ void solveEquation(int N,double epsilon, double A1, double A2, double B1, double
   }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
   double A1 = -4, B1 = 4, A2 = -1, B2 = 3; //rectangle
-  double epsilon = 1e-6;
-  int N = 21;
+  double epsilon = 1e-9;
+  int N = 80;
+  int cnt_treads = atoi(argv[1]);
 
-
-  solveEquation(N, epsilon, A1, A2, B1, B2);
+  solveEquation(N, epsilon, A1, A2, B1, B2, cnt_treads);
 
   return 0;
 }
