@@ -4,6 +4,7 @@
 #include <omp.h>
 #include <cstdlib>
 #include <cmath>
+
 using namespace std;  
 
 const int N = 10;
