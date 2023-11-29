@@ -238,6 +238,17 @@ int main(int argc,char *argv[])
     cout << "Iterations = " << it << ", accurancy = " << dispr << endl;
     cout << "Number of threads = " << omp_get_max_threads() << endl;
 
+    ofstream rslt;
+    rslt.open ("result.txt");
+    for (int j=0; j<=N; j++)
+    {
+        rslt << w[0,j];
+        for (int i=1; i<=N; i++)
+            rslt << ",\t" << w[i,j];
+        rslt << endl;
+    }
+    rslt.close();
+
  
     delete[] a;
     delete[] b;
